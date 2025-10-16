@@ -19,10 +19,13 @@ JAVA script
 
 
 
-
+WEEK5:
+deployement
 
 
 GOOD LUCK !
+
+les deadlines depend les cours de monsieur boubenia 
 
 
 
