@@ -6,7 +6,7 @@ faire un site complet avec le backend
 
 #STEP 1 : (THIS WEEK)
 WEEK1:
-- START BY HTML
+- START BY HTML (15min every day)
 
 WEEK2:
 CSS 
