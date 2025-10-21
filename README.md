@@ -6,7 +6,7 @@ faire un site complet avec le backend
 
 #STEP 1 : (THIS WEEK)
 WEEK1:
-- START BY HTML
+- START BY HTML (15min every day)
 
 WEEK2:
 CSS 
@@ -26,6 +26,64 @@ deployement
 GOOD LUCK !
 
 les deadlines depend les cours de monsieur boubenia 
+
+📝 1. Application de gestion de tâches (To-Do List connectée au backend)
+j ajoute authentification 
+Objectif :
+
+gérer une liste de tâches avec sauvegarde dans une base de données.
+ 
+ 
+ Fonctionnalités :
+Ajouter / modifier / supprimer une tâche
+
+
+Marquer une tâche comme terminée
+
+
+Persistance des données via le backend Express
+
+
+API REST (GET, POST, PUT, DELETE)
+
+
+Interface dynamique (DOM + fetch API)
+
+
+ Techno : HTML / CSS / JS + Express + (SQLite ou PostgreSQL)
+ Niveau : ⭐⭐⭐ (intermédiaire solide)
+ Bonus : tri par date ou statut
+
+
+Conception de projet :
+
+
+https://claude.ai/public/artifacts/9f8ef8ea-eef3-405c-a0fe-3f9723d9d02a   le design
+
+
+🔐 Authentification
+Système login/register avec interface claire
+Stockage de l'utilisateur connecté en session
+Bouton déconnexion avec reset des données
+
+
+📋 Gestion des tâches
+Ajouter une tâche (appuyez sur Entrée ou cliquez Ajouter)
+Modifier chaque tâche (clic sur l'icône Edit)
+
+Supprimer une tâche
+Cocher comme terminée (icône checkbox)
+🎨 Fonctionnalités bonus
+Filtrage :
+
+Tous / Actives / Terminées
+Tri : Par date ou priorité
+Badges de priorité : High (rouge), Medium (jaune), Low (vert)
+Dashboard avec statistiques
+Design moderne avec gradients et ombres
+
+
+
 
 
 
