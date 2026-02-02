@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Frontend Only</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- App Container (No Auth) -->
+    <div id="app-container" class="app-container">
+        <header class="app-header">
+            <h1>📝 To-Do List</h1>
+            <div class="user-info">
+                <span id="user-name">Mode Hors Ligne</span>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- Add Task Section -->
+            <section class="add-task-section">
+                <form id="add-task-form" class="add-task-form">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="task-input" 
+                            placeholder="Ajouter une nouvelle tâche..." 
+                            required
+                            autocomplete="off"
+                        >
+                        <select id="priority-select" class="priority-select">
+                            <option value="low">🟢 Basse</option>
+                            <option value="medium" selected>🟡 Moyenne</option>
+                            <option value="high">🔴 Haute</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-icon">+</span>
+                            Ajouter
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Stats Dashboard -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-tasks">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="active-tasks">0</div>
+                        <div class="stat-label">Actives</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completed-tasks">0</div>
+                        <div class="stat-label">Terminées</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completion-rate">0%</div>
+                        <div class="stat-label">Progression</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters and Sort -->
+            <section class="controls-section">
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="all">
+                        Tous
+                    </button>
+                    <button class="filter-btn" data-filter="active">
+                        Actives
+                    </button>
+                    <button class="filter-btn" data-filter="completed">
+                        Terminées
+                    </button>
+                </div>
+                <div class="sort-group">
+                    <label for="sort-select">Trier par:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="date">Date</option>
+                        <option value="priority">Priorité</option>
+                        <option value="title">Titre</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Tasks Container -->
+            <section class="tasks-section">
+                <div id="tasks-container" class="tasks-container">
+                    <!-- Tasks will be dynamically added here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>Aucune tâche</h3>
+                    <p>Ajoutez votre première tâche pour commencer!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="standalone.js"></script>
+</body>
+</html>

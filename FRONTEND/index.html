@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Gestion de Tâches</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Auth Container -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <h1>📝 To-Do List</h1>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Connexion</button>
+                <button class="auth-tab" data-tab="register">Inscription</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mot de passe</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="register-name">Nom</label>
+                    <input type="text" id="register-name" placeholder="Votre nom" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mot de passe</label>
+                    <input type="password" id="register-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">S'inscrire</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>📝 Ma Liste de Tâches</h1>
+                <div class="user-info">
+                    <span id="user-name" class="user-name"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Déconnexion</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <section class="dashboard">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3 id="total-tasks">0</h3>
+                    <p>Total</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="completed-tasks">0</h3>
+                    <p>Terminées</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <h3 id="active-tasks">0</h3>
+                    <p>Actives</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <h3 id="high-priority-tasks">0</h3>
+                    <p>Priorité haute</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Add Task Form -->
+            <div class="add-task-section">
+                <form id="add-task-form" class="add-task-form">
+                    <input 
+                        type="text" 
+                        id="task-input" 
+                        placeholder="Ajouter une nouvelle tâche..." 
+                        required
+                    >
+                    <select id="priority-select" class="priority-select">
+                        <option value="low">🟢 Basse</option>
+                        <option value="medium" selected>🟡 Moyenne</option>
+                        <option value="high">🔴 Haute</option>
+                    </select>
+                    <button type="submit" class="btn btn-add">Ajouter</button>
+                </form>
+            </div>
+
+            <!-- Filters and Sort -->
+            <div class="controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">Tous</button>
+                    <button class="filter-btn" data-filter="active">Actives</button>
+                    <button class="filter-btn" data-filter="completed">Terminées</button>
+                </div>
+                <div class="sort-controls">
+                    <label for="sort-select">Trier par:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="date">Date</option>
+                        <option value="priority">Priorité</option>
+                        <option value="title">Titre</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tasks List -->
+            <div id="tasks-container" class="tasks-container">
+                <!-- Tasks will be dynamically added here -->
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
