@@ -1,4 +1,6 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const supabase = require("../supabase");
 const router = express.Router();
 
@@ -6,111 +8,74 @@ router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   
   try {
-    // 1. Essayer d'inscription normale Supabase
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        data: {
-          name: name || email.split('@')[0]
-        }
-      }
+    // Vérifier si l'email existe déjà
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Erreur vérification email:', checkError);
+      return res.status(500).json({ 
+        error: "Database error",
+        message: "Erreur lors de la vérification de l'email" 
+      });
+    }
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: "Email already exists",
+        message: "Cet email est déjà utilisé" 
+      });
+    }
+    
+    // Hasher le mot de passe
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    
+    // Insérer le nouvel utilisateur
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        email,
+        name,
+        password_hash: passwordHash
+      })
+      .select()
+      .single();
+    
+    if (insertError) {
+      console.error('Erreur insertion utilisateur:', insertError);
+      return res.status(500).json({ 
+        error: "Registration failed",
+        message: "L'inscription a échoué" 
+      });
+    }
+    
+    // Créer un token JWT
+    const token = jwt.sign(
+      { userId: newUser.id, email: newUser.email },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+    
+    console.log('Inscription réussie pour:', email);
+    res.json({
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        created_at: newUser.created_at
+      },
+      token
     });
-    
-    if (!error && data.user) {
-      console.log('Inscription Supabase réussie pour:', email);
-      return res.json({
-        user: data.user,
-        session: data.session,
-        token: data.session?.access_token
-      });
-    }
-    
-    if (error) {
-      console.log('Erreur inscription Supabase:', error.code, error.message);
-      
-      // 2. Si rate limit, vérifier si l'utilisateur existe déjà
-      if (error.code === 'over_email_send_rate_limit') {
-        console.log('Rate limit, vérification existence utilisateur:', email);
-        
-        try {
-          const { data: userList, error: listError } = await supabase.auth.admin.listUsers();
-          if (!listError && userList.users) {
-            const existingUser = userList.users.find(user => user.email === email);
-            
-            if (existingUser) {
-              console.log('Utilisateur existe déjà, tentative de connexion:', email);
-              // Essayer de connecter l'utilisateur existant
-              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ 
-                email, 
-                password 
-              });
-              
-              if (!signInError && signInData.user) {
-                return res.json({
-                  user: signInData.user,
-                  session: signInData.session,
-                  token: signInData.session?.access_token
-                });
-              } else {
-                return res.status(400).json({ 
-                  error: "User exists",
-                  message: "Ce compte existe déjà mais avec un mot de passe différent" 
-                });
-              }
-            }
-          }
-        } catch (adminError) {
-          console.log('Impossible de vérifier les utilisateurs (admin non disponible)');
-        }
-        
-        // Si rate limit et utilisateur n'existe pas, créer utilisateur local
-        console.log('Rate limit mais utilisateur n\'existe pas, création locale:', email);
-        const fakeUser = {
-          id: `local_${Date.now()}`,
-          email: email,
-          name: name || email.split('@')[0],
-          created_at: new Date().toISOString()
-        };
-        
-        return res.json({
-          user: fakeUser,
-          session: { access_token: `local_token_${Date.now()}` },
-          token: `local_token_${Date.now()}`
-        });
-      }
-      
-      // 3. Pour autres erreurs, créer utilisateur local
-      console.log('Autre erreur Supabase, création utilisateur local:', email);
-      const fakeUser = {
-        id: `local_${Date.now()}`,
-        email: email,
-        name: name || email.split('@')[0],
-        created_at: new Date().toISOString()
-      };
-      
-      return res.json({
-        user: fakeUser,
-        session: { access_token: `local_token_${Date.now()}` },
-        token: `local_token_${Date.now()}`
-      });
-    }
     
   } catch (error) {
     console.error('Registration error:', error);
-    
-    // En cas d'erreur système, créer utilisateur local
-    const fakeUser = {
-      id: `local_${Date.now()}`,
-      email: email,
-      name: name || email.split('@')[0],
-      created_at: new Date().toISOString()
-    };
-    
-    res.json({
-      user: fakeUser,
-      session: { access_token: `local_token_${Date.now()}` },
-      token: `local_token_${Date.now()}`
+    res.status(500).json({ 
+      error: "Server error",
+      message: "Erreur serveur lors de l'inscription" 
     });
   }
 });
@@ -119,82 +84,61 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // 1. Essayer login Supabase normal
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Rechercher l'utilisateur par email
+    const { data: user, error: findError } = await supabase
+      .from("users")
+      .select("id, email, name, password_hash, created_at")
+      .eq("email", email)
+      .maybeSingle();
     
-    if (!error && data.user) {
-      console.log('Login Supabase réussi pour:', email);
-      return res.json(data);
-    }
-    
-    // 2. Si erreur de credentials, vérifier si l'utilisateur existe dans Supabase
-    if (error && (error.code === 'invalid_credentials' || error.code === 'invalid_grant')) {
-      console.log('Tentative de vérification de l\'existence de l\'utilisateur:', email);
-      
-      // Vérifier si l'utilisateur existe en tentant de le récupérer
-      try {
-        const { data: userList, error: listError } = await supabase.auth.admin.listUsers();
-        if (!listError && userList.users) {
-          const existingUser = userList.users.find(user => user.email === email);
-          
-          if (existingUser) {
-            console.log('Utilisateur existe mais mauvais mot de passe:', email);
-            return res.status(400).json({ 
-              error: "Invalid credentials",
-              message: "Email existe déjà mais mot de passe incorrect" 
-            });
-          }
-        }
-      } catch (adminError) {
-        console.log('Impossible de vérifier les utilisateurs (admin non disponible)');
-      }
-      
-      // Si l'utilisateur n'existe pas, créer un utilisateur local
-      console.log('Utilisateur n\'existe pas dans Supabase, création locale:', email);
-      const fakeUser = {
-        id: `local_${Date.now()}`,
-        email: email,
-        name: email.split('@')[0],
-        created_at: new Date().toISOString()
-      };
-      
-      return res.json({
-        user: fakeUser,
-        session: { access_token: `local_token_${Date.now()}` },
-        token: `local_token_${Date.now()}`
+    if (findError && findError.code !== 'PGRST116') {
+      console.error('Erreur recherche utilisateur:', findError);
+      return res.status(500).json({ 
+        error: "Database error",
+        message: "Erreur lors de la recherche de l'utilisateur" 
       });
     }
     
-    // 3. Si autre erreur Supabase, créer utilisateur local
-    console.log('Autre erreur Supabase, création utilisateur local:', email, error?.code);
-    const fakeUser = {
-      id: `local_${Date.now()}`,
-      email: email,
-      name: email.split('@')[0],
-      created_at: new Date().toISOString()
-    };
+    if (!user) {
+      return res.status(400).json({ 
+        error: "Invalid credentials",
+        message: "Email ou mot de passe incorrect" 
+      });
+    }
     
+    // Vérifier le mot de passe
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(400).json({ 
+        error: "Invalid credentials",
+        message: "Email ou mot de passe incorrect" 
+      });
+    }
+    
+    // Créer un token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+    
+    console.log('Login réussi pour:', email);
     res.json({
-      user: fakeUser,
-      session: { access_token: `local_token_${Date.now()}` },
-      token: `local_token_${Date.now()}`
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        created_at: user.created_at
+      },
+      token
     });
     
   } catch (error) {
     console.error('Login error:', error);
-    
-    // En cas d'erreur système, créer utilisateur local
-    const fakeUser = {
-      id: `local_${Date.now()}`,
-      email: email,
-      name: email.split('@')[0],
-      created_at: new Date().toISOString()
-    };
-    
-    res.json({
-      user: fakeUser,
-      session: { access_token: `local_token_${Date.now()}` },
-      token: `local_token_${Date.now()}`
+    res.status(500).json({ 
+      error: "Server error",
+      message: "Erreur serveur lors de la connexion" 
     });
   }
 });
