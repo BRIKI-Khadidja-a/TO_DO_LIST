@@ -1,4 +1,5 @@
 // API Base URL
+const API_URL = 'http://localhost:5000/api';
 
 
 // State Management
@@ -59,6 +60,42 @@ function setupEventListeners() {
         currentSort = e.target.value;
         renderTasks();
     });
+
+    // Show password buttons
+    document.querySelectorAll('.show-password-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.target;
+            const input = document.getElementById(targetId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        });
+    });
+
+    // Remember me functionality
+    const rememberMeCheckbox = document.getElementById('remember-me');
+    const loginEmail = document.getElementById('login-email');
+    
+    // Load saved email if remember me was checked
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+        loginEmail.value = savedEmail;
+        rememberMeCheckbox.checked = true;
+    }
+    
+    // Save email when remember me changes
+    rememberMeCheckbox.addEventListener('change', () => {
+        if (rememberMeCheckbox.checked && loginEmail.value) {
+            localStorage.setItem('rememberedEmail', loginEmail.value);
+        } else {
+            localStorage.removeItem('rememberedEmail');
+        }
+    });
 }
 
 // Auth Functions
@@ -83,6 +120,7 @@ async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
+    const rememberMe = document.getElementById('remember-me').checked;
 
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
@@ -97,14 +135,22 @@ async function handleLogin(e) {
             currentUser = data.user;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             localStorage.setItem('token', data.token);
+            
+            // Handle remember me
+            if (rememberMe) {
+                localStorage.setItem('rememberedEmail', email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+            
             showApp();
             loadTasks();
         } else {
-            alert(data.message || 'Erreur de connexion');
+            console.error('Login error:', data.message || 'Erreur de connexion');
         }
     } catch (error) {
         console.error('Login error:', error);
-        alert('Erreur de connexion au serveur');
+        // Pas d'alerte, juste une erreur dans la console
     }
 }
 
@@ -130,11 +176,11 @@ async function handleRegister(e) {
             showApp();
             loadTasks();
         } else {
-            alert(data.message || 'Erreur d\'inscription');
+            console.error('Register error:', data.message || 'Erreur d\'inscription');
         }
     } catch (error) {
         console.error('Register error:', error);
-        alert('Erreur de connexion au serveur');
+        // Pas d'alerte, juste une erreur dans la console
     }
 }
 
@@ -209,16 +255,16 @@ async function handleAddTask(e) {
             renderTasks();
             updateStats();
         } else {
-            alert('Erreur lors de l\'ajout de la tâche');
+            console.error('Add task error:', data.message || 'Erreur lors de l\'ajout de la tâche');
         }
     } catch (error) {
         console.error('Add task error:', error);
-        alert('Erreur de connexion au serveur');
+        // Pas d'alerte, juste une erreur dans la console
     }
 }
 
 async function toggleTaskComplete(taskId) {
-    const task = tasks.find(t => t._id === taskId);
+    const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
     try {
@@ -257,7 +303,7 @@ async function deleteTask(taskId) {
         });
 
         if (response.ok) {
-            tasks = tasks.filter(t => t._id !== taskId);
+            tasks = tasks.filter(t => t.id !== taskId);
             renderTasks();
             updateStats();
         }
@@ -280,7 +326,7 @@ async function updateTask(taskId, updates) {
 
         if (response.ok) {
             const updatedTask = await response.json();
-            const index = tasks.findIndex(t => t._id === taskId);
+            const index = tasks.findIndex(t => t.id === taskId);
             if (index !== -1) {
                 tasks[index] = updatedTask;
             }
@@ -316,102 +362,207 @@ function renderTasks() {
         return;
     }
 
-    tasksContainer.innerHTML = filteredTasks.map(task => createTaskHTML(task)).join('');
-
-    // Add event listeners
-    filteredTasks.forEach(task => {
-        const taskElement = document.getElementById(`task-${task._id}`);
-        
-        // Checkbox
-        const checkbox = taskElement.querySelector('.task-checkbox');
-        checkbox.addEventListener('change', () => toggleTaskComplete(task._id));
-
-        // Edit button
-        const editBtn = taskElement.querySelector('.edit');
-        editBtn.addEventListener('click', () => enterEditMode(task._id));
-
-        // Delete button
-        const deleteBtn = taskElement.querySelector('.delete');
-        deleteBtn.addEventListener('click', () => deleteTask(task._id));
-    });
-}
-
-function createTaskHTML(task) {
-    const date = new Date(task.createdAt || Date.now()).toLocaleDateString('fr-FR');
-    const priorityLabels = {
-        high: '🔴 Haute',
-        medium: '🟡 Moyenne',
-        low: '🟢 Basse'
-    };
-
-    return `
-        <div class="task-item ${task.completed ? 'completed' : ''}" id="task-${task._id}">
-            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
+    // Afficher les tâches
+    tasksContainer.innerHTML = filteredTasks.map(task => `
+        <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+            <div class="task-checkbox">
+                <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                       id="checkbox-${task.id}"
+                       onchange="toggleTask('${task.id}')">
+            </div>
             <div class="task-content">
                 <div class="task-title">${escapeHtml(task.title)}</div>
                 <div class="task-meta">
-                    <span class="priority-badge ${task.priority || 'medium'}">${priorityLabels[task.priority || 'medium']}</span>
-                    <span class="task-date">📅 ${date}</span>
+                    <span class="task-priority priority-${task.priority}">${getPriorityLabel(task.priority)}</span>
+                    <span class="task-date">${formatDate(task.created_at)}</span>
                 </div>
             </div>
             <div class="task-actions">
-                <button class="task-btn edit">✏️</button>
-                <button class="task-btn delete">🗑️</button>
+                <button class="task-btn delete-btn" onclick="deleteTask('${task.id}')" title="Supprimer">
+                    🗑️
+                </button>
             </div>
         </div>
-    `;
+    `).join('');
 }
 
-function enterEditMode(taskId) {
-    const task = tasks.find(t => t._id === taskId);
-    if (!task) return;
-
-    const taskElement = document.getElementById(`task-${taskId}`);
-    const priorityLabels = {
-        high: '🔴 Haute',
-        medium: '🟡 Moyenne',
-        low: '🟢 Basse'
-    };
-
-    taskElement.innerHTML = `
-        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} disabled>
-        <form class="task-edit-form" id="edit-form-${taskId}">
-            <input type="text" class="task-edit-input" value="${escapeHtml(task.title)}" required>
-            <select class="task-edit-priority">
-                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>🟢 Basse</option>
-                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>🟡 Moyenne</option>
-                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>🔴 Haute</option>
-            </select>
-            <div class="task-edit-actions">
-                <button type="submit" class="task-btn save">✅</button>
-                <button type="button" class="task-btn cancel">❌</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`edit-form-${taskId}`);
-    const cancelBtn = form.querySelector('.cancel');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newTitle = form.querySelector('.task-edit-input').value.trim();
-        const newPriority = form.querySelector('.task-edit-priority').value;
+// Fonctions globales pour les tâches
+window.toggleTask = async function(id) {
+    console.log('=== TOGGLE START ===');
+    console.log('ID reçu:', id);
+    console.log('Tasks actuelles:', tasks);
+    
+    const task = tasks.find(t => t.id === id);
+    console.log('Task trouvée:', task);
+    
+    if (!task) {
+        console.error('Task non trouvée!');
+        return;
+    }
+    
+    const checkbox = document.getElementById(`checkbox-${id}`);
+    console.log('Checkbox trouvée:', checkbox);
+    
+    const originalCompleted = task.completed;
+    const newCompleted = !originalCompleted;
+    
+    console.log('Original completed:', originalCompleted);
+    console.log('New completed:', newCompleted);
+    
+    // Réinitialiser la case à son état original pendant la requête
+    if (checkbox) {
+        checkbox.checked = originalCompleted;
+        console.log('Checkbox réinitialisée à:', originalCompleted);
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Token disponible:', !!token);
         
-        if (newTitle) {
-            await updateTask(taskId, { title: newTitle, priority: newPriority });
+        if (!token) {
+            console.error('Pas de token!');
+            // Pas d'alerte, juste une erreur dans la console
+            return;
         }
-    });
+        
+        console.log('Envoi requête PUT vers:', `${API_URL}/todos/${id}`);
+        console.log('Body:', JSON.stringify({ completed: newCompleted }));
+        
+        const response = await fetch(`${API_URL}/todos/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ completed: newCompleted })
+        });
 
-    cancelBtn.addEventListener('click', () => renderTasks());
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+
+        if (response.ok) {
+            console.log('Mise à jour réussie!');
+            // Mettre à jour seulement si le serveur a accepté
+            task.completed = newCompleted;
+            if (checkbox) {
+                checkbox.checked = newCompleted;
+            }
+            renderTasks();
+            updateStats();
+        } else {
+            const errorText = await response.text();
+            console.error('Erreur toggle:', errorText);
+            // Remettre la case à son état original
+            if (checkbox) {
+                checkbox.checked = originalCompleted;
+            }
+            // Pas d'alerte, juste une erreur dans la console
+        }
+    } catch (error) {
+        console.error('Error updating task:', error);
+        // Remettre la case à son état original
+        if (checkbox) {
+            checkbox.checked = originalCompleted;
+        }
+        // Pas d'alerte, juste une erreur dans la console
+    }
+    
+    console.log('=== TOGGLE END ===');
+};
+
+window.deleteTask = async function(id) {
+    console.log('Tentative de suppression tâche ID:', id);
+    console.log('Token disponible:', !!localStorage.getItem('token'));
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+        try {
+            const token = localStorage.getItem('token');
+            console.log('Envoi requête DELETE vers:', `${API_URL}/todos/${id}`);
+            
+            const response = await fetch(`${API_URL}/todos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (response.ok) {
+                console.log('Suppression réussie, mise à jour locale');
+                // Mettre à jour seulement si le serveur a confirmé
+                tasks = tasks.filter(t => t.id !== id);
+                renderTasks();
+                updateStats();
+            } else {
+                const errorText = await response.text();
+                console.error('Erreur suppression:', errorText);
+                // Pas d'alerte, juste une erreur dans la console
+            }
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            // Pas d'alerte, juste une erreur dans la console
+        }
+    }
+};
+
+// Fonctions utilitaires
+function getPriorityLabel(priority) {
+    const labels = {
+        low: '🟢 Basse',
+        medium: '🟡 Moyenne', 
+        high: '🔴 Haute'
+    };
+    return labels[priority] || '🟡 Moyenne';
 }
 
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize App
+function init() {
+    // Check if user is logged in
+    const savedUser = localStorage.getItem('currentUser');
+    const token = localStorage.getItem('token');
+    
+    if (savedUser && token) {
+        currentUser = JSON.parse(savedUser);
+        showApp();
+        loadTasks();
+    } else {
+        showAuth();
+    }
+
+    // Event Listeners
+    setupEventListeners();
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+
+// Fonctions manquantes
 function sortTasks(tasks) {
     const sorted = [...tasks];
     
     if (currentSort === 'date') {
         sorted.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
             return dateB - dateA;
         });
     } else if (currentSort === 'priority') {
@@ -437,12 +588,3 @@ function updateStats() {
     document.getElementById('active-tasks').textContent = active;
     document.getElementById('high-priority-tasks').textContent = highPriority;
 }
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
