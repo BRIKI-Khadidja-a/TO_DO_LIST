@@ -1,228 +1,202 @@
-# 📝 To-Do List - Application de Gestion de Tâches
+# 📝 To-Do List Application
 
-## 📖 Description
+Une application web de gestion de tâches avec authentification sécurisée utilisant Supabase comme base de données.
 
-Application complète de gestion de tâches (To-Do List) développée dans le cadre universitaire pour appliquer les concepts de développement web full-stack.
+## ✨ Fonctionnalités
 
-**Objectif:** Créer un site web complet avec frontend et backend, incluant l'authentification et la persistance des données.
-
-## ✨ Fonctionnalités Implémentées
-
-### 🔐 Authentification
-- ✅ Système login/register avec interface claire
-- ✅ Stockage sécurisé des mots de passe (bcrypt)
-- ✅ Authentification JWT
-- ✅ Session persistante (localStorage)
-- ✅ Bouton déconnexion avec reset des données
+### 🔐 Authentification Sécurisée
+- **Inscription** avec validation d'email unique
+- **Connexion** avec mot de passe hashé (bcrypt)
+- **Tokens JWT** pour les sessions sécurisées
+- **"Remember Me"** pour mémoriser l'email
+- **Logout** et déconnexion automatique
 
 ### 📋 Gestion des Tâches
-- ✅ Ajouter une tâche (Entrée ou bouton)
-- ✅ Modifier chaque tâche (édition inline)
-- ✅ Supprimer une tâche
-- ✅ Marquer comme terminée/active
-- ✅ Persistance des données via backend Express
-- ✅ API REST complète (GET, POST, PUT, DELETE)
-- ✅ Interface dynamique (DOM + Fetch API)
+- **Créer** des tâches avec titre et priorité
+- **Marquer comme terminé** avec synchronisation instantanée
+- **Supprimer** des tâches avec confirmation
+- **Filtrer** par statut (toutes, actives, terminées)
+- **Trier** par date ou priorité
+- **Statistiques** en temps réel
 
-### 🎨 Fonctionnalités Bonus
-- ✅ **Filtrage:** Tous / Actives / Terminées
-- ✅ **Tri:** Par date, priorité ou titre
-- ✅ **Badges de priorité:** Haute (🔴), Moyenne (🟡), Basse (🟢)
-- ✅ **Dashboard:** Statistiques en temps réel
-- ✅ **Design moderne:** Gradients, ombres, animations
-- ✅ **Responsive:** Compatible mobile/tablette/desktop
+### 🎨 Interface Utilisateur
+- **Design moderne** et responsive
+- **Thème clair** avec animations fluides
+- **Pas de popups** intrusifs (erreurs en console)
+- **Feedback visuel** pour toutes les actions
+- **Support multi-utilisateurs** avec données isolées
 
-## 🛠️ Technologies
-
-### Frontend
-- HTML5
-- CSS3 (Variables CSS, Grid, Flexbox, Animations)
-- JavaScript Vanilla (ES6+)
-- Fetch API
+## 🛠️ Stack Technique
 
 ### Backend
-- Node.js + Express.js
-- MongoDB + Mongoose
-- JWT (jsonwebtoken)
-- bcryptjs
-- CORS
+- **Node.js** avec Express.js
+- **Supabase** (PostgreSQL + API)
+- **JWT** pour l'authentification
+- **bcrypt** pour le hashage des mots de passe
+- **CORS** configuré pour le frontend
+
+### Frontend
+- **HTML5** sémantique
+- **CSS3** moderne avec animations
+- **JavaScript** vanilla (ES6+)
+- **Fetch API** pour les requêtes HTTP
+- **LocalStorage** pour la persistence
+
+### Base de Données
+- **PostgreSQL** via Supabase
+- **Row Level Security** (RLS)
+- **Relations** entre utilisateurs et tâches
+- **Index** optimisés pour la performance
 
 ## 🚀 Installation et Démarrage
 
 ### Prérequis
-- Node.js (v14+)
-- MongoDB (installé et démarré)
+- Node.js (v14 ou supérieur)
+- Un compte Supabase (gratuit)
 
-### Installation
-
-1. **Cloner le projet**
+### 1. Cloner le projet
 ```bash
-git clone <votre-repo>
+git clone <repository-url>
 cd TO_DO_LIST
 ```
 
-2. **Installer les dépendances**
-```bash 
-cd backend
+### 2. Configurer Supabase
+1. Créez un projet sur [supabase.com](https://supabase.com)
+2. Allez dans Settings > API pour obtenir vos clés
+3. Exécutez le script SQL `database_setup.sql` dans l'éditeur SQL Supabase
+
+### 3. Configurer le backend
+```bash
+cd BACKEND
 npm install
-cd ..
 ```
 
-3. **Démarrer MongoDB**
-```bash
-# Linux/Mac
-sudo systemctl start mongodb
-# ou
-sudo systemctl start mongod
+Créez un fichier `.env` :
+```env
+# Configuration Supabase
+SUPABASE_URL=votre_url_supabase
+SUPABASE_ANON_KEY=votre_cle_anon
 
-# Vérifier que MongoDB fonctionne
-sudo systemctl status mongodb
+# Configuration serveur
+PORT=5000
+
+# Secret pour les tokens JWT
+JWT_SECRET=votre_secret_jwt
 ```
 
-4. **Lancer le serveur backend**
+### 4. Démarrer le serveur backend
 ```bash
-cd backend
 npm start
-# Le serveur démarre sur http://localhost:5000
 ```
 
-5. **Ouvrir le frontend**
-- Double-cliquer sur `index.html`
-- Ou utiliser un serveur HTTP local:
-```bash
-# Option 1: Python
-python -m http.server 8080
-
-# Option 2: Node.js http-server
-npx http-server -p 8080
-
-# Puis ouvrir http://localhost:8080
-```
-
-### Script de démarrage rapide
-```bash
-./start.sh
-```
+### 5. Lancer le frontend
+Ouvrez `FRONTEND/index.html` dans votre navigateur ou utilisez un serveur local comme Live Server.
 
 ## 📁 Structure du Projet
 
 ```
 TO_DO_LIST/
-├── index.html              # Page principale
-├── style.css               # Styles CSS
-├── app.js                  # Logique frontend
-├── start.sh               # Script de démarrage (optionnel)
-├── README.md              # Documentation
-└── backend/
-    ├── server.js         # Serveur Express
-    ├── package.json      # Dépendances
-    ├── models/
-    │   ├── user.js      # Modèle utilisateur
-    │   └── todo.js      # Modèle tâche
-    ├── routes/
-    │   ├── auth.js      # Routes authentification
-    │   └── todos.js     # Routes tâches
-    └── middleware/
-        └── auth.js      # Middleware JWT
+├── BACKEND/
+│   ├── routes/
+│   │   └── auth.js          # Routes d'authentification
+│   ├── server.js            # Serveur Express principal
+│   ├── supabase.js          # Client Supabase
+│   ├── package.json         # Dépendances backend
+│   └── .env                 # Variables d'environnement
+├── FRONTEND/
+│   ├── index.html           # Page principale
+│   ├── app.js              # Logique JavaScript
+│   └── style.css           # Styles CSS
+├── database_setup.sql      # Script SQL pour Supabase
+└── README.md              # Ce fichier
 ```
 
-## 🔌 API Endpoints
+## 🔧 Configuration Supabase
+
+### Script SQL à exécuter
+Le fichier `database_setup.sql` contient :
+
+1. **Table `users`** - Stockage des utilisateurs avec mots de passe hashés
+2. **Table `todos`** - Tâches liées aux utilisateurs
+3. **Index** - Optimisation des performances
+4. **Contraintes** - Validation des données
+
+### Politiques de Sécurité
+- Chaque utilisateur ne voit que ses propres tâches
+- Accès contrôlé par tokens JWT
+- Row Level Security (RLS) activé
+
+## 🎯 Utilisation
+
+### 1. Créer un compte
+- Allez sur l'onglet "Inscription"
+- Entrez votre nom, email et mot de passe
+- L'email doit être unique et valide
+
+### 2. Se connecter
+- Utilisez l'onglet "Connexion"
+- Cochez "Remember Me" pour mémoriser votre email
+- Les tokens JWT expirent après 24h
+
+### 3. Gérer les tâches
+- **Ajouter** : Entrez un titre et choisissez la priorité
+- **Terminer** : Cliquez sur la case à cocher
+- **Supprimer** : Cliquez sur l'icône corbeille
+- **Filtrer** : Utilisez les boutons en haut
+- **Trier** : Utilisez le menu déroulant
+
+## 🔍 Débogage
+
+### Console du navigateur
+Toutes les erreurs s'affichent dans la console (F12) :
+- `=== TOGGLE START ===` : Logs détaillés du toggle
+- `console.error()` : Erreurs de connexion/API
+- `console.log()` : Actions réussies
+
+### Logs du serveur
+Le backend affiche des logs détaillés pour :
+- Tentatives de connexion/inscription
+- Opérations sur les tâches
+- Erreurs de base de données
+
+## 🛡️ Sécurité
 
 ### Authentification
-- `POST /api/auth/register` - Inscription (body: name, email, password)
-- `POST /api/auth/login` - Connexion (body: email, password)
+- ✅ Mots de passe hashés avec bcrypt (10 rounds)
+- ✅ Tokens JWT avec expiration
+- ✅ Validation d'email unique
+- ✅ Pas de fallback local (plus de faux utilisateurs)
 
-### Tâches (nécessite authentification)
-- `GET /api/todos` - Récupérer toutes les tâches
-- `POST /api/todos` - Créer une tâche (body: title, priority)
-- `PUT /api/todos/:id` - Modifier une tâche (body: title, completed, priority)
-- `DELETE /api/todos/:id` - Supprimer une tâche
+### Base de données
+- ✅ Row Level Security (RLS)
+- ✅ Isolation des données par utilisateur
+- ✅ Contraintes d'intégrité
+- ✅ Index optimisés
 
-## 💡 Utilisation
-
-1. **Inscription/Connexion**
-   - Ouvrir l'application
-   - S'inscrire avec nom, email et mot de passe
-   - Ou se connecter si compte existant
-
-2. **Ajouter une tâche**
-   - Entrer le titre dans le champ
-   - Choisir la priorité (Basse/Moyenne/Haute)
-   - Appuyer sur Entrée ou cliquer "Ajouter"
-
-3. **Gérer les tâches**
-   - Cocher pour marquer comme terminée
-   - Cliquer ✏️ pour modifier
-   - Cliquer 🗑️ pour supprimer
-
-4. **Filtrer et trier**
-   - Utiliser les boutons de filtre (Tous/Actives/Terminées)
-   - Choisir le tri (Date/Priorité/Titre)
-
-## 🐛 Dépannage
-
-### MongoDB ne démarre pas
-```bash
-sudo systemctl restart mongodb
-sudo systemctl status mongodb
-```
-
-### Port 5000 déjà utilisé
-Modifier le port dans `backend/server.js`:
-```javascript
-const PORT = process.env.PORT || 3000;
-```
-
-### Erreur CORS
-Vérifier que l'URL de l'API dans `app.js` correspond au serveur:
-```javascript
-const API_URL = 'http://localhost:5000/api';
-```
-
-### Les tâches ne s'affichent pas
-1. Vérifier que le serveur backend est démarré
-2. Ouvrir la console du navigateur (F12) pour voir les erreurs
-3. Vérifier que MongoDB fonctionne
-
-## 🎯 Objectifs Pédagogiques
-
-Ce projet permet de pratiquer:
-- ✅ Manipulation du DOM
-- ✅ Requêtes asynchrones (Fetch API)
-- ✅ Authentification JWT
-- ✅ API REST (CRUD complet)
-- ✅ MongoDB et Mongoose
-- ✅ Express.js et middleware
-- ✅ CSS moderne
-- ✅ Sécurité web
-
-## 📝 Améliorations Futures
-
-- [ ] Dates d'échéance pour les tâches
-- [ ] Catégories/tags
-- [ ] Recherche de tâches
-- [ ] Export/Import de données
-- [ ] Mode sombre
-- [ ] Notifications
-- [ ] Partage de tâches entre utilisateurs
-
-## 📅 Timeline
-
-- **Start:** 24-10-2025 (HTML - 15min)
-- **Week 5:** Déploiement
-- **Deadlines:** Selon les cours de Monsieur Boubenia
-
-## 🎨 Design
-
-Design inspiré de: https://claude.ai/public/artifacts/9f8ef8ea-eef3-405c-a0fe-3f9723d9d02a
-
-## 📝 Niveau
-
-⭐⭐⭐⭐ Intermédiaire-Avancé
-
-## 🎉 GOOD LUCK!
+### API
+- ✅ CORS configuré
+- ✅ Validation des entrées
+- ✅ Gestion des erreurs
+- ✅ Pas d'exposition de données sensibles
 
 
+
+## 🤝 Contribuer
+
+1. Fork le projet
+2. Créez une branche (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commitez vos changements (`git commit -am 'Ajout nouvelle fonctionnalité'`)
+4. Pushez vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
+5. Ouvrez une Pull Request
+
+## 📞 Support
+
+Pour toute question ou problème :
+- Vérifiez les logs dans la console du navigateur
+- Consultez les logs du serveur backend
+- Assurez-vous que Supabase est correctement configuré
+
+---
 
 
 
