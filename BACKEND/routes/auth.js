@@ -7,6 +7,8 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   
+  console.log('Tentative d\'inscription:', { name, email });
+  
   try {
     // Vérifier si l'email existe déjà
     const { data: existingUser, error: checkError } = await supabase
@@ -14,6 +16,8 @@ router.post("/register", async (req, res) => {
       .select("id")
       .eq("email", email)
       .maybeSingle();
+    
+    console.log('Résultat recherche utilisateur:', { existingUser, checkError });
     
     if (checkError && checkError.code !== 'PGRST116') {
       console.error('Erreur vérification email:', checkError);
@@ -24,6 +28,7 @@ router.post("/register", async (req, res) => {
     }
     
     if (existingUser) {
+      console.log('Email déjà utilisé:', email);
       return res.status(400).json({ 
         error: "Email already exists",
         message: "Cet email est déjà utilisé" 
@@ -33,6 +38,8 @@ router.post("/register", async (req, res) => {
     // Hasher le mot de passe
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
+    
+    console.log('Tentative d\'insertion utilisateur...');
     
     // Insérer le nouvel utilisateur
     const { data: newUser, error: insertError } = await supabase
@@ -45,11 +52,21 @@ router.post("/register", async (req, res) => {
       .select()
       .single();
     
+    console.log('Résultat insertion:', { newUser, insertError });
+    
     if (insertError) {
       console.error('Erreur insertion utilisateur:', insertError);
       return res.status(500).json({ 
         error: "Registration failed",
-        message: "L'inscription a échoué" 
+        message: "L'inscription a échoué: " + insertError.message 
+      });
+    }
+    
+    if (!newUser) {
+      console.error('Insertion a retourné null');
+      return res.status(500).json({ 
+        error: "Registration failed",
+        message: "L'inscription a échoué - aucune donnée retournée" 
       });
     }
     
@@ -75,7 +92,7 @@ router.post("/register", async (req, res) => {
     console.error('Registration error:', error);
     res.status(500).json({ 
       error: "Server error",
-      message: "Erreur serveur lors de l'inscription" 
+      message: "Erreur serveur lors de l'inscription: " + error.message 
     });
   }
 });
